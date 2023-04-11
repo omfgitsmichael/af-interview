@@ -20,10 +20,10 @@
  * When the position is zero and the acceleration is negative, the velocity with continue to negatively increase even though the vehicle
  * is not moving, i.e., position remains at zero.
  *
- * The steady-state error of the system seems to be roughly around +-0.3 meters. Given the magnitude of the disturbances acting on the
- * system (with 3 stand deviations it could reach up to ~ +-20 newtons worth of disturbance) -- I felt that the 0.3 meters of error was
- * acceptable -- especially since I only have up to 20 newtons worth of thrust to work with. The system overshoot seems to be 3-4% while the 
- * system settling time seems to be around 3 seconds. To improve controller fidelity I would likely add anti-windup methods on the integrators.
+ * The steady-state error of the system seems to be generally be around ~+-0.1 meters. Given the magnitude of the disturbances acting on the
+ * system I felt that the ~0.1 meters of error was acceptable. The system overshoot seems to be ~0% making the system potentially
+ * `overdamped` while the system settling time seems to be around 2.5 seconds. To improve controller fidelity I would likely add anti-windup
+ * methods on the integrators and tune the ID terms for the mid and low-level controllers.
 **/
 use std::time::Duration;
 
@@ -47,8 +47,8 @@ fn main() {
 
     // Set the control gains
     controller.set_pos_gains(6.75, 0.85, 4.5);
-    controller.set_vel_gains(1.0, 0.0, 0.0);
-    controller.set_accel_gains(1.0, 0.0, 0.0);
+    controller.set_vel_gains(0.25, 0.0, 0.0);
+    controller.set_accel_gains(0.25, 0.0, 0.0);
 
     loop {
         // Get sensor feedback
