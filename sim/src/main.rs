@@ -1,3 +1,31 @@
+/**
+ * Michael Renzetti - Main file AF Interview submission.
+ *
+ * The controller(s) used are all PID control algorithms augmented with a feedforward component. In the sims current state
+ * there are 3 control loops all ran in a cascaded control approach, however, the mid-level and low-level feedback PID
+ * controllers are currently disabled (zeroed out, but still in the code to see how it would be done) only utilizing their
+ * feedforward components. The outer most loop is the position control loop. The total position control is used as part
+ * of the feedforward component of the velocity controller (mid-level), and the total velocity control is used as a
+ * part of the feedforward component for the acceleration controller (low-level).
+ *
+ * The PID controllers were tuned basically using a trial-and-error approach. The velocity (mid-level) and acceleration (low-level)
+ * controllers are currently disabled because the benefit I assumed I would gain did not seem to be worth the hassle of the amount of
+ * tuning I was having to go through given the magnitude of steady-state error I was currently facing. However, for a real system I
+ * believe this is the approach I would do to properly control the vechile as the position control would fine tune any position errors,
+ * the velocity control would fine tune any velocity errors, and the acceleration control would fine tune any acceleration errors.
+ *
+ * To test this simulation I used the println command to print the states at each iteration and see how the system was working. I originally
+ * was only working with the PID controller and then I added the feedforward term afterward to help cancel out the noise and that improved
+ * performance significantly. When debugging I also used the println command. After satisfied with how the system was performing I added the
+ * plots for further analysis to help me get a graphical representation of the system. I believe I noticed a bug in the sim code early on.
+ * When the position is zero and the acceleration is negative, the velocity with continue to negatively increase even though the vehicle
+ * is not moving, i.e., position remains at zero.
+ *
+ * The steady-state error of the system seems to be roughly around +-0.3 meters. Given the magnitude of the disturbances acting on the
+ * system (with 3 stand deviations it could reach up to ~ +-20 newtons worth of disturbance) -- I felt that the 0.3 meters of error was
+ * acceptable -- especially since I only have up to 20 newtons worth of thrust to work with. The system overshoot seems to be 3-4% while the 
+ * system settling time seems to be around 3 seconds.
+**/
 use std::time::Duration;
 
 fn main() {
@@ -139,7 +167,7 @@ impl Control {
         self.acceleration_controller.set_gains(kp, ki, kd);
     }
 
-    pub fn run(&mut self, state: [f64; 3], desired: [f64; 3]) -> f64{
+    pub fn run(&mut self, state: [f64; 3], desired: [f64; 3]) -> f64 {
         // Determine position control -- outer loop
         let pos_control: f64 = {
             // Calculate pos error states
