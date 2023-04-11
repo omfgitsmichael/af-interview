@@ -2,17 +2,16 @@
  * Michael Renzetti - Main file AF Interview submission.
  *
  * The controller(s) used are all PID control algorithms augmented with a feedforward component. In the sims current state
- * there are 3 control loops all ran in a cascaded control approach, however, the mid-level and low-level feedback PID
- * controllers are currently disabled (zeroed out, but still in the code to see how it would be done) only utilizing their
- * feedforward components. The outer most loop is the position control loop. The total position control is used as part
- * of the feedforward component of the velocity controller (mid-level), and the total velocity control is used as a
- * part of the feedforward component for the acceleration controller (low-level).
+ * there are 3 control loops all ran in a cascaded control approach. The outer most loop is the position control loop.
+ * The total position control is used as part of the feedforward component of the velocity controller (mid-level), and the
+ * total velocity control is used as a part of the feedforward component for the acceleration controller (low-level).
  *
  * The PID controllers were tuned basically using a trial-and-error approach. The velocity (mid-level) and acceleration (low-level)
- * controllers are currently disabled because the benefit I assumed I would gain did not seem to be worth the hassle of the amount of
- * tuning I was having to go through given the magnitude of steady-state error I was currently facing. However, for a real system I
- * believe this is the approach I would do to properly control the vechile as the position control would fine tune any position errors,
- * the velocity control would fine tune any velocity errors, and the acceleration control would fine tune any acceleration errors.
+ * controllers are currently only P controllers because the benefit I assumed I would gain did not seem to be worth the hassle of
+ * the amount of tuning I was having to go through given the magnitude of steady-state error I was currently facing. However, for a
+ * real system I believe this is the approach I would do to properly control the vechile as the position control would fine tune
+ * any position errors, the velocity control would fine tune any velocity errors, and the acceleration control would fine tune any
+ * acceleration errors.
  *
  * To test this simulation I used the println command to print the states at each iteration and see how the system was working. I originally
  * was only working with the PID controller and then I added the feedforward term afterward to help cancel out the noise and that improved
@@ -31,14 +30,14 @@ use std::time::Duration;
 fn main() {
     // Sim parameters
     const T_INIT: f64 = 0.0;
-    const T_FINAL: f64 = 10.0;
+    const T_FINAL: f64 = 15.0;
     const DT: f64 = 0.01;
-    const NUMBER_ELEMENTS: usize = ((T_FINAL - T_INIT) / DT) as usize;
 
     let mut control_values = Vec::new();
     let mut height_values = Vec::new();
     let mut index1 = Vec::new();
     let mut index2 = Vec::new();
+    let mut time: f64 = T_INIT;
 
     let mut sim = sim::Sim::default();
     let mut controller = Control::default();
@@ -48,10 +47,10 @@ fn main() {
 
     // Set the control gains
     controller.set_pos_gains(6.75, 0.85, 4.5);
-    controller.set_vel_gains(0.75, 0.25, 0.5); // Currently not used
-    controller.set_accel_gains(1.0, 1.0, 1.0); // Currently not used
+    controller.set_vel_gains(1.0, 0.0, 0.0);
+    controller.set_accel_gains(1.0, 0.0, 0.0);
 
-    for i in 0..NUMBER_ELEMENTS {
+    loop {
         // Get sensor feedback
         let state: [f64; 3] = [sim.pos(), sim.velocity(), sim.accl()];
 
@@ -69,8 +68,14 @@ fn main() {
 
         control_values.push(thrust_percentage);
         height_values.push(sim.pos());
-        index1.push(i);
-        index2.push(i);
+        index1.push(time);
+        index2.push(time);
+
+        time = time + DT;
+
+        if time >= T_FINAL {
+            break;
+        }
 
         std::thread::sleep(Duration::from_millis(10))
     }
@@ -176,24 +181,24 @@ impl Control {
         };
 
         // Calculate velocity feedforward term
-        let vel_ff = -state[1] + pos_control;
+        let vel_ff = desired[1] + pos_control;
 
         // Calculate velocity error states -- mid level loop
         let vel_feedback: f64 = {
             // Calculate pos error states
-            self.velocity_controller.set_error(0.0, 0.0); // Zeroed out -- not in use atm
+            self.velocity_controller.set_error(state[1], desired[1]);
             self.velocity_controller.calculate_control()
         };
 
         let vel_control = vel_ff + vel_feedback;
 
         // Calculate acceleration feedforward term
-        let accel_ff = -state[2] + vel_control;
+        let accel_ff = desired[2] + vel_control;
 
         // Calculate acceleration error states -- inner loop
         let accel_feedback: f64 = {
             // Calculate pos error states
-            self.velocity_controller.set_error(0.0, 0.0); // Zeroed out -- not in use atm
+            self.velocity_controller.set_error(state[2], desired[2]);
             self.velocity_controller.calculate_control()
         };
 
