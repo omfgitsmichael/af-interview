@@ -24,7 +24,7 @@
  * The steady-state error of the system seems to be roughly around +-0.3 meters. Given the magnitude of the disturbances acting on the
  * system (with 3 stand deviations it could reach up to ~ +-20 newtons worth of disturbance) -- I felt that the 0.3 meters of error was
  * acceptable -- especially since I only have up to 20 newtons worth of thrust to work with. The system overshoot seems to be 3-4% while the 
- * system settling time seems to be around 3 seconds.
+ * system settling time seems to be around 3 seconds. To improve controller fidelity I would likely add anti-windup methods on the integrators.
 **/
 use std::time::Duration;
 
