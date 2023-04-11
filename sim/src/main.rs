@@ -26,6 +26,10 @@
  * This seems to be likely because there is no negative thrust so it overshoots a lot (but seems to stabilize for all cases I have tried).
  * Would likely require gain scheduling for various altitude to accomodate for the lack of negative thrust control. To improve controller
  * fidelity I would likely add anti-windup methods on the integrators and tune the ID terms for the mid and low-level controllers.
+ * 
+ * Alternatively, zeroing out the gains for the velocity and acceleration controllers results in a significantly smoother control input, while
+ * still adequeately controller the vehicle, but I feel like the position error is slightly worse with out it, and there was no requirement on
+ * smoothness of the controller for the assignment. Feel free to test on your own and see the results!
 **/
 use std::time::Duration;
 
