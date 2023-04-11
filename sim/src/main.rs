@@ -21,9 +21,11 @@
  * is not moving, i.e., position remains at zero.
  *
  * The steady-state error of the system seems to be generally be around ~+-0.1 meters. Given the magnitude of the disturbances acting on the
- * system I felt that the ~0.1 meters of error was acceptable. The system overshoot seems to be ~0% making the system potentially
- * `overdamped` while the system settling time seems to be around 2.5 seconds. To improve controller fidelity I would likely add anti-windup
- * methods on the integrators and tune the ID terms for the mid and low-level controllers.
+ * system I felt that the ~0.1 meters of error was acceptable. The system overshoot seems to be ~0% making the system potentially seem
+ * `overdamped` while the system settling time seems to be around 2.5 seconds. The system response is different for various altitude hoverings.
+ * This seems to be likely because there is no negative thrust so it overshoots a lot (but seems to stabilize for all cases I have tried).
+ * Would likely require gain scheduling for various altitude to accomodate for the lack of negative thrust control. To improve controller
+ * fidelity I would likely add anti-windup methods on the integrators and tune the ID terms for the mid and low-level controllers.
 **/
 use std::time::Duration;
 
