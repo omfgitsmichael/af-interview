@@ -2,6 +2,16 @@ use std::time::Duration;
 
 fn main() {
     // Sim parameters
+    const T_INIT: f64 = 0.0;
+    const T_FINAL: f64 = 10.0;
+    const DT: f64 = 0.01;
+    const NUMBER_ELEMENTS: usize = ((T_FINAL - T_INIT) / DT) as usize;
+
+    let mut control_values = Vec::new();
+    let mut height_values = Vec::new();
+    let mut index1 = Vec::new();
+    let mut index2 = Vec::new();
+
     let mut sim = sim::Sim::default();
     let mut controller = Control::default();
 
@@ -13,7 +23,7 @@ fn main() {
     controller.set_vel_gains(0.75, 0.25, 0.5); // Currently not used
     controller.set_accel_gains(1.0, 1.0, 1.0); // Currently not used
 
-    loop {
+    for i in 0..NUMBER_ELEMENTS {
         // Get sensor feedback
         let state: [f64; 3] = [sim.pos(), sim.velocity(), sim.accl()];
 
@@ -21,14 +31,36 @@ fn main() {
         let thrust_percentage: f64 = controller.run(state, desired);
 
         sim.tick(thrust_percentage);
+
         println!(
             "y = {} v = {} a = {}",
             sim.pos(),
             sim.velocity(),
             sim.accl()
         );
+
+        control_values.push(thrust_percentage);
+        height_values.push(sim.pos());
+        index1.push(i);
+        index2.push(i);
+
         std::thread::sleep(Duration::from_millis(10))
     }
+
+    let trace1 = plotly::Scatter::new(index1, height_values).name("trace1");
+    let trace2 = plotly::Scatter::new(index2, control_values).name("trace2");
+
+    let mut plot1 = plotly::Plot::new();
+    plot1.add_trace(trace1);
+    let layout1 = plotly::Layout::new().title("Vehicle Height Over Time".into());
+    plot1.set_layout(layout1);
+    plot1.show();
+
+    let mut plot2 = plotly::Plot::new();
+    plot2.add_trace(trace2);
+    let layout2 = plotly::Layout::new().title("Control Output Over Time".into());
+    plot2.set_layout(layout2);
+    plot2.show();
 }
 
 pub struct PIDController {
